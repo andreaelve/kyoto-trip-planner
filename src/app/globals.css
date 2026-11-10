@@ -1,26 +1,30 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Airbnb palette (names from its Design Language System). */
+@theme {
+  --color-rausch: #ff385c; /* coral-pink: stay accent, primary button */
+  --color-babu: #00a699; /* teal: experience accent */
+  --color-arches: #fc642d; /* orange: food accent */
+  --color-hof: #484848; /* dark grey: main text */
+  --color-foggy: #767676; /* grey: secondary text, thinking dots */
+  --color-placeholder: #ebebeb; /* image placeholder boxes */
+  --color-bubble: #f7f7f7; /* assistant bubble */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --animate-dot: dot-pulse 1.2s ease-in-out infinite;
+  @keyframes dot-pulse {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-4px); }
   }
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-hof);
+  font-family: var(--font-sans);
 }
