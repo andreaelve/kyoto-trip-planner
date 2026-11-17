@@ -25,12 +25,14 @@ export default function TripPlannerChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [draft, setDraft] = useState("");
   const [isThinking, setIsThinking] = useState(false);
-  const threadEndRef = useRef<HTMLLIElement>(null);
+  const threadRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Keep the newest message in view.
+  // Keep the newest message in view. Scroll only the thread, never the page: scrollIntoView also
+  // scrolled the page while the iPhone keyboard was open, leaving the message box mid-screen after it closed.
   useEffect(() => {
-    threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const thread = threadRef.current;
+    thread?.scrollTo({ top: thread.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
   // Grow the message box with its text (up to max-h-32), so nothing typed is hidden on a phone.
@@ -44,7 +46,7 @@ export default function TripPlannerChat() {
 
   // Give focus back to the box once it unlocks.
   useEffect(() => {
-    if (!isThinking) inputRef.current?.focus();
+    if (!isThinking) inputRef.current?.focus({ preventScroll: true });
   }, [isThinking]);
 
   /** Shows thinking dots in reply `replyId`, then swaps them for the cards or the friendly bubble. */
@@ -80,6 +82,10 @@ export default function TripPlannerChat() {
 
     const replyId = newId();
     setDraft("");
+    // Close the phone keyboard before the box locks, and put the page back at the top
+    // (the page itself never scrolls; only the thread does).
+    inputRef.current?.blur();
+    window.scrollTo(0, 0);
     setMessages((m) => [
       ...m,
       { id: newId(), role: "user", text: request },
@@ -135,7 +141,7 @@ export default function TripPlannerChat() {
       </p>
 
       {/* Scrolling thread */}
-      <main className="min-h-0 flex-1 overflow-y-auto">
+      <main ref={threadRef} className="min-h-0 flex-1 overflow-y-auto">
         <ol className="mx-auto flex max-w-2xl flex-col gap-4 px-4 py-6">
           {messages.map((msg) =>
             msg.role === "user" ? (
@@ -180,7 +186,6 @@ export default function TripPlannerChat() {
               </li>
             ),
           )}
-          <li ref={threadEndRef} aria-hidden className="h-0" />
         </ol>
       </main>
 
