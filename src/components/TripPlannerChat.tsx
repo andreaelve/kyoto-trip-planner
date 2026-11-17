@@ -33,6 +33,15 @@ export default function TripPlannerChat() {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
 
+  // Grow the message box with its text (up to max-h-32), so nothing typed is hidden on a phone.
+  useEffect(() => {
+    const box = inputRef.current;
+    if (!box) return;
+    box.style.height = "auto";
+    const border = box.offsetHeight - box.clientHeight; // height includes the border, scrollHeight doesn't
+    box.style.height = `${box.scrollHeight + border}px`;
+  }, [draft]);
+
   // Give focus back to the box once it unlocks.
   useEffect(() => {
     if (!isThinking) inputRef.current?.focus();
@@ -103,7 +112,7 @@ export default function TripPlannerChat() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-dvh flex-col bg-white">
       {/* Header */}
       <header className="shrink-0 border-b border-black/10 bg-white">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
@@ -116,6 +125,14 @@ export default function TripPlannerChat() {
           </div>
         </div>
       </header>
+
+      {/* Research-ethics notice: always visible, so no guest thinks a real booking is being made. */}
+      <p
+        data-testid="research-notice"
+        className="shrink-0 border-b border-black/10 bg-[#f7f7f7] px-4 py-2.5 text-center text-base font-medium text-[#222222]"
+      >
+        Sample trips for research only. Nothing is booked and no payment is taken.
+      </p>
 
       {/* Scrolling thread */}
       <main className="min-h-0 flex-1 overflow-y-auto">
@@ -181,8 +198,8 @@ export default function TripPlannerChat() {
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
             disabled={isThinking}
-            placeholder={isThinking ? "Planning your trip…" : "Plan a weekend in Kyoto for two"}
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-full border border-black/20 px-4 py-2.5 text-sm text-hof outline-none placeholder:text-foggy focus:border-hof disabled:cursor-not-allowed disabled:bg-bubble"
+            placeholder={isThinking ? "Planning your trip…" : "Describe your trip"}
+            className="max-h-32 min-h-11 flex-1 resize-none overflow-y-auto rounded-3xl border border-black/20 px-4 py-2.5 text-base text-hof outline-none placeholder:text-foggy focus:border-hof disabled:cursor-not-allowed disabled:bg-bubble"
           />
           <button
             type="submit"
