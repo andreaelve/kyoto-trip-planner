@@ -15,9 +15,9 @@ To see the friendly error bubble, add `#fail` to your message: the first such re
 
 ## Screenshots
 
-| While thinking | After the reply | After Try again |
-| --- | --- | --- |
-| ![Thinking dots in the reply bubble, message box locked](docs/screenshots/thinking.png) | ![Stay, experience and food cards in the reply](docs/screenshots/cards.png) | ![Friendly error bubble with Try again greyed out, and thinking dots in a new reply below it](docs/screenshots/retry.png) |
+| While thinking | After the reply | After Try again | Cards after Try again |
+| --- | --- | --- | --- |
+| ![Thinking dots in the reply bubble, message box locked](docs/screenshots/thinking.png) | ![Stay, experience and food cards in the reply](docs/screenshots/cards.png) | ![Friendly error bubble with Try again greyed out, and thinking dots in a new reply below it](docs/screenshots/retry.png) | ![Friendly error bubble with Try again greyed out, and the stay, experience and food cards in the reply below it](docs/screenshots/retry-cards.png) |
 
 Images are grey placeholders because photo rights for the prototype are not cleared.
 
