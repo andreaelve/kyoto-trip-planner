@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import CardList from "@/components/cards/CardList";
+import ErrorBubbleContent from "@/components/ErrorBubbleContent";
 import ThinkingDots from "@/components/ThinkingDots";
 import { getMockReply } from "@/lib/mockReply";
+import { parseReply } from "@/lib/parseReply";
 import type { ChatMessage } from "@/lib/types";
 
 /** The dots stay up at least this long so they never just flicker. */
@@ -36,38 +38,56 @@ export default function TripPlannerChat() {
     if (!isThinking) inputRef.current?.focus();
   }, [isThinking]);
 
-  async function send(text: string) {
+  /** Shows thinking dots in reply `replyId`, then swaps them for the cards or the friendly bubble. */
+  async function fetchReply(request: string, replyId: string) {
+    setIsThinking(true); // locks the box, Send and Try again
+    try {
+      const [body] = await Promise.all([
+        getMockReply(request),
+        new Promise((r) => setTimeout(r, MIN_THINKING_MS)),
+      ]);
+      const cards = parseReply(body);
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === replyId
+            ? { id: replyId, role: "assistant", status: "done", text: "Here's your Kyoto weekend for two, Fri 11 – Sun 13 Apr:", cards }
+            : msg,
+        ),
+      );
+    } catch {
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === replyId ? { id: replyId, role: "assistant", status: "error", request, retried: false } : msg,
+        ),
+      );
+    } finally {
+      setIsThinking(false);
+    }
+  }
+
+  function send(text: string) {
     const request = text.trim();
     if (!request || isThinking) return;
 
     const replyId = newId();
     setDraft("");
-    setIsThinking(true); // locks the box and the button
     setMessages((m) => [
       ...m,
       { id: newId(), role: "user", text: request },
       { id: replyId, role: "assistant", status: "thinking" },
     ]);
+    fetchReply(request, replyId);
+  }
 
-    const [cards] = await Promise.all([
-      getMockReply(request),
-      new Promise((r) => setTimeout(r, MIN_THINKING_MS)),
+  /** Try again: the friendly bubble stays in the thread, and a new reply with dots appears under it. */
+  function retry(errorId: string, request: string) {
+    if (isThinking) return;
+    const replyId = newId();
+    setMessages((m) => [
+      ...m.map((msg) => (msg.id === errorId && msg.role === "assistant" && msg.status === "error" ? { ...msg, retried: true } : msg)),
+      { id: replyId, role: "assistant", status: "thinking" },
     ]);
-
-    setMessages((m) =>
-      m.map((msg) =>
-        msg.id === replyId
-          ? {
-              id: replyId,
-              role: "assistant",
-              status: "done",
-              text: "Here's your Kyoto weekend for two, Fri 11 – Sun 13 Apr:",
-              cards,
-            }
-          : msg,
-      ),
-    );
-    setIsThinking(false);
+    fetchReply(request, replyId);
   }
 
   function onSubmit(e: FormEvent) {
@@ -111,13 +131,25 @@ export default function TripPlannerChat() {
               <li key={msg.id} className="flex flex-col items-start gap-1">
                 <span className="pl-1 text-xs font-semibold text-foggy">Assistant</span>
                 <div
-                  className={`rounded-2xl rounded-bl-md bg-bubble px-4 py-3 text-sm text-hof ${
-                    msg.status === "done" && msg.cards ? "w-full" : "max-w-[80%]"
-                  }`}
+                  data-bubble={msg.status}
+                  className={`rounded-2xl rounded-bl-md px-4 py-3 text-sm ${
+                    msg.status === "error"
+                      ? "border border-gray-200 bg-white text-gray-800"
+                      : "bg-bubble text-hof"
+                  } ${msg.status === "done" && msg.cards ? "w-full" : "max-w-[80%]"}`}
                 >
-                  {msg.status === "thinking" ? (
-                    <ThinkingDots />
-                  ) : (
+                  {msg.status === "thinking" && <ThinkingDots />}
+                  {/* Polite live region, on the page from the moment the reply starts,
+                      so the friendly message is read out when it appears. */}
+                  <div aria-live="polite">
+                    {msg.status === "error" && (
+                      <ErrorBubbleContent
+                        onRetry={() => retry(msg.id, msg.request)}
+                        disabled={msg.retried || isThinking}
+                      />
+                    )}
+                  </div>
+                  {msg.status === "done" && (
                     <>
                       <p>{msg.text}</p>
                       {msg.cards && (

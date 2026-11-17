@@ -53,4 +53,6 @@ export type CardItem =
 export type ChatMessage =
   | { id: string; role: "user"; text: string }
   | { id: string; role: "assistant"; status: "thinking" }
-  | { id: string; role: "assistant"; status: "done"; text: string; cards?: CardItem[] };
+  | { id: string; role: "assistant"; status: "done"; text: string; cards?: CardItem[] }
+  /** The reply could not be read. `request` is resent by Try again; `retried` greys the button out after use. */
+  | { id: string; role: "assistant"; status: "error"; request: string; retried: boolean };
